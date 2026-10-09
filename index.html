@@ -1,1 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上一站四川 下一站2027见</title>
+    <style>
+        :root {
+            --primary-color: #c0392b;
+            --bg-color: #f7f9fa;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 15px;
+            max-width: 900px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(192, 57, 43, 0.2);
+        }
+        header h1 { margin: 0; font-size: 26px; letter-spacing: 1px; }
+        header p { margin: 5px 0 0 0; opacity: 0.9; font-size: 14px; }
+        
+        .members-container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        .member-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            border-left: 6px solid var(--primary-color);
+        }
+        .member-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px dashed #f0f0f0;
+            padding-bottom: 8px;
+        }
+        .review-section {
+            margin-bottom: 15px;
+        }
+        .review-label {
+            font-weight: bold;
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        /* 深度优化打字输入框 */
+        .review-textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            box-sizing: border-box;
+            background-color: #fafafa;
+            transition: all 0.3s;
+        }
+        .review-textarea:focus {
+            background-color: #fff;
+            border-color: #3498db;
+            box-shadow: 0 0 8px rgba(52,152,219,0.15);
+            outline: none;
+        }
+        
+        /* 表情互动区 */
+        .emoji-reactions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            padding-left: 2px;
+        }
+        .reaction-btn {
+            background: #f1f2f6;
+            border: 1px solid #e4e7eb;
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .reaction-btn:hover {
+            background: #e4e7eb;
+            transform: scale(1.05);
+        }
+        .reaction-btn.active {
+            background: #e8f4fd;
+            border-color: #1d9bf0;
+            color: #1d9bf0;
+        }
+        .count {
+            font-weight: bold;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🇨🇳 记录上一站 · 四川行 ✈️ 期待下一站 · 2027见 🐼</h1>
+        <p>✨ 5人旅行回忆纪录墙 ── 点击输入框即可自由打字，并在小伙伴的感想下点击表情互动</p>
+    </header>
+
+    <div class="members-container" id="members-wall">
+        <!-- 由 JavaScript 自动产生 5 个人的卡片 -->
+    </div>
+
+    <script>
+        // 5 个人的名字清单
+        const names = ["林姐", "赵妹", "树林", "狗子", "肥美"];
+        
+        // 4 个感想维度设定
+        const topics = [
+            { key: "scenery", label: "🏞️ 记忆犹新的风景", placeholder: "分享你在四川看过最震撼、最难忘的景色..." },
+            { key: "food", label: "🍲 回味无穷的美食", placeholder: "麻辣火锅、串串香、甜皮鸭... 哪一个让你至今还在流口水？" },
+            { key: "thing", label: "🗿 印象深刻的事物", placeholder: "旅途中发生的特别好玩、新奇或深刻的人事物..." },
+            { key: "feeling", label: "📝 所感所受", placeholder: "这趟旅行带给你内心最大的触动与感受是什么..." }
+        ];
+
+        // 表情按钮设定
+        const reactionTypes = [
+            { code: "heart", icon: "❤️", label: "点心" },
+            { code: "agree", icon: "🤝", label: "认同" },
+            { code: "laugh", icon: "😂", label: "笑" },
+            { code: "shock", icon: "😮", label: "吃惊" }
+        ];
+
+        // 读取本地储存的数据
+        let wallData = JSON.parse(localStorage.getItem('sichuan_2027_data')) || {};
+
+        function renderWall() {
+            const container = document.getElementById('members-wall');
+            container.innerHTML = '';
+
+            names.forEach(name => {
+                // 建立每个人的大卡片
+                let card = document.createElement('div');
+                card.className = 'member-card';
+                
+                let cardHtml = `<div class="member-name">👤 ${name} 的旅行感想</div>`;
+
+                // 产生 4 个感想输入区域
+                topics.forEach(topic => {
+                    const contentKey = `${name}_${topic.key}_text`;
+                    const currentText = wallData[contentKey] || "";
+
+                    cardHtml += `
+                        <div class="review-section">
+                            <div class="review-label">${topic.label}</div>
+                            <textarea class="review-textarea" 
+                                      placeholder="${topic.placeholder}" 
+                                      oninput="saveText('${contentKey}', this.value)">${currentText}</textarea>
+                            
+                            <!-- 表情互动按钮 -->
+                            <div class="emoji-reactions">
+                    `;
+
+                    // 在每个问题下方产生 4 种互动表情
+                    reactionTypes.forEach(react => {
+                        const reactKey = `${name}_${topic.key}_${react.code}`;
+                        const count = wallData[reactKey] || 0;
+                        
+                        cardHtml += `
+                            <button class="reaction-btn" onclick="addReaction('${reactKey}')">
+                                <span>${react.icon}</span> 
+                                <span class="count">${count > 0 ? count : react.label}</span>
+                            </button>
+                        `;
+                    });
+
+                    cardHtml += `
+                            </div>
+                        </div>
+                    `;
+                });
+
+                card.innerHTML = cardHtml;
+                container.appendChild(card);
+            });
+        }
+
+        // 当输入框打字时，即时储存文字内容
+        function saveText(key, value) {
+            wallData[key] = value;
+            localStorage.setItem('sichuan_2027_data', JSON.stringify(wallData));
+        }
+
+        // 当点击表情按钮时，数字加 1
+        function addReaction(key) {
+            if (!wallData[key]) wallData[key] = 0;
+            wallData[key] += 1; // 每次点击增加一个表情数
+            localStorage.setItem('sichuan_2027_data', JSON.stringify(wallData));
+            renderWall(); // 重新渲染刷新数字
+        }
+
+        // 首次载入执行
+        renderWall();
+    </script>
+</body>
+</html>
 
